@@ -1,7 +1,6 @@
 'use strict';
 
 // write code here
-// helper: convert salary string like '$162,700' → 162700 safely
 function parseSalary(salaryStr) {
   if (!salaryStr) {
     return 0;
@@ -10,23 +9,26 @@ function parseSalary(salaryStr) {
   return Number(String(salaryStr).replace(/[$,]/g, '')) || 0;
 }
 
-// sort list items in descending order by salary
 function sortList(list) {
   if (!list) {
     return;
   }
 
-  const items = Array.from(list.querySelectorAll('li'));
+  const items = Array.from(list.querySelectorAll('li')).map((node, index) => ({
+    node,
+    salary: parseSalary(node.dataset.salary),
+    index,
+  }));
 
   items.sort((a, b) => {
-    const salaryA = parseSalary(a.dataset.salary);
-    const salaryB = parseSalary(b.dataset.salary);
+    if (b.salary !== a.salary) {
+      return b.salary - a.salary;
+    }
 
-    return salaryB - salaryA; // descending order
+    return a.index - b.index;
   });
 
-  // re-append sorted items into the list
-  items.forEach((item) => list.appendChild(item));
+  items.forEach((item) => list.appendChild(item.node));
 }
 
 // return array of employees
@@ -36,20 +38,26 @@ function getEmployees(list) {
   }
 
   return Array.from(list.querySelectorAll('li')).map((item) => {
-    // try to get just the name text if wrapped in an element
-    const nameEl = item.querySelector('.name');
-    const employeeName = nameEl
-      ? nameEl.textContent.trim()
-      : item.textContent.trim();
+    const employeeName =
+      item.dataset.name ||
+      item.querySelector('.name')?.textContent.trim() ||
+      item.textContent.trim();
+
+    const ageValue = item.dataset.age;
+    const age = ageValue !== undefined ? Number(ageValue) || 0 : 0;
 
     return {
       name: employeeName,
       position: item.dataset.position || '',
       salary: parseSalary(item.dataset.salary),
-      age: Number(item.dataset.age) || 0,
+      age,
     };
   });
 }
+
+// expose functions globally for tests
+window.sortList = sortList;
+window.getEmployees = getEmployees;
 
 // run when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -61,4 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // expose globally for testing/debug
   window.employees = employees;
+
+  // console.table(employees);
 });
