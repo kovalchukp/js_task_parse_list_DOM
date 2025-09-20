@@ -1,13 +1,21 @@
 'use strict';
 
 // write code here
-// helper: convert salary string like '$162,700' → 162700
+// helper: convert salary string like '$162,700' → 162700 safely
 function parseSalary(salaryStr) {
-  return Number(salaryStr.replace(/[$,]/g, ''));
+  if (!salaryStr) {
+    return 0;
+  }
+
+  return Number(String(salaryStr).replace(/[$,]/g, '')) || 0;
 }
 
 // sort list items in descending order by salary
 function sortList(list) {
+  if (!list) {
+    return;
+  }
+
   const items = Array.from(list.querySelectorAll('li'));
 
   items.sort((a, b) => {
@@ -23,12 +31,24 @@ function sortList(list) {
 
 // return array of employees
 function getEmployees(list) {
-  return Array.from(list.querySelectorAll('li')).map((item) => ({
-    name: item.textContent.trim(),
-    position: item.dataset.position,
-    salary: parseSalary(item.dataset.salary),
-    age: Number(item.dataset.age),
-  }));
+  if (!list) {
+    return [];
+  }
+
+  return Array.from(list.querySelectorAll('li')).map((item) => {
+    // try to get just the name text if wrapped in an element
+    const nameEl = item.querySelector('.name');
+    const employeeName = nameEl
+      ? nameEl.textContent.trim()
+      : item.textContent.trim();
+
+    return {
+      name: employeeName,
+      position: item.dataset.position || '',
+      salary: parseSalary(item.dataset.salary),
+      age: Number(item.dataset.age) || 0,
+    };
+  });
 }
 
 // run when DOM is ready
@@ -39,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const employees = getEmployees(list);
 
-  return employees;
-
-  // console.log(employees);
+  // expose globally for testing/debug
+  window.employees = employees;
 });
